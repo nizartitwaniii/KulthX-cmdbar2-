@@ -1,0 +1,454 @@
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local UIS = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+
+-- منع تنفيذ السكربت أكثر من مرة
+if CoreGui:FindFirstChild("BottomBarGui") then
+    return -- إذا كان السكربت قد تم تنفيذه بالفعل، لا تفعل أي شيء
+end
+
+-- إنشاء تأثير Blur
+local blurEffect = Instance.new("BlurEffect")
+blurEffect.Size = 0
+blurEffect.Parent = Lighting
+
+-- إنشاء ScreenGui للشريط السفلي في CoreGui
+local bottomBarGui = Instance.new("ScreenGui")
+bottomBarGui.Name = "BottomBarGui"
+bottomBarGui.Parent = CoreGui
+
+-- إضافة UIScale للشريط السفلي
+local bottomBarScale = Instance.new("UIScale")
+bottomBarScale.Parent = bottomBarGui
+
+-- إطار الشريط السفلي
+local bottomBarFrame = Instance.new("Frame")
+bottomBarFrame.Name = "BottomBarFrame"
+bottomBarFrame.Size = UDim2.new(0.5, 0, 0, 50) -- ارتفاع الشريط
+bottomBarFrame.Position = UDim2.new(0.25, 0, 1, -80)
+bottomBarFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+bottomBarFrame.Parent = bottomBarGui
+
+-- إضافة UICorner للشريط السفلي
+local bottomBarCorner = Instance.new("UICorner")
+bottomBarCorner.CornerRadius = UDim.new(0, 15)
+bottomBarCorner.Parent = bottomBarFrame
+
+-- دالة لتفعيل الأزرار النشطة وتغيير لونها
+local function activateButton(button)
+    for _, child in pairs(bottomBarFrame:GetChildren()) do
+        if child:IsA("TextButton") then
+            child.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- اللون الجديد
+            child.TextColor3 = Color3.fromRGB(255, 255, 255) -- نص أبيض
+        end
+    end
+    button.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+end
+
+-- دالة لإظهار الواجهة بتأثير انزلاق
+local function showInterface(frame)
+    frame.Position = UDim2.new(0.25, 0, 1, 0) -- بداية من الأسفل
+    frame.Visible = true
+
+    -- تأثير Blur عند فتح الواجهة
+    blurEffect.Size = 10
+    frame:TweenPosition(UDim2.new(0.25, 0, 0.25, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.5, true)
+end
+
+-- دالة لإخفاء الواجهة بتأثير انزلاق
+local function hideInterface(frame)
+    frame:TweenPosition(UDim2.new(0.25, 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.5, true, function()
+        frame.Visible = false
+        blurEffect.Size = 0 -- إلغاء تأثير Blur مباشرة عند إغلاق الواجهة
+    end)
+end
+
+-- دالة لإنشاء الزر
+local function createButton(name, position)
+    local button = Instance.new("TextButton")
+    button.Name = name
+    button.Text = name
+    button.Size = UDim2.new(0, 80, 0, 25) -- حجم الزر
+    button.Position = position
+    button.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- اللون الجديد
+    button.TextColor3 = Color3.fromRGB(255, 255, 255) -- نص أبيض
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 14 -- حجم النص أصغر
+    button.TextScaled = false -- تعطيل القياس التلقائي للنص
+    button.Parent = bottomBarFrame
+
+    -- إضافة UICorner للزر
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim.new(0, 10) -- زوايا دائرية أكبر
+    buttonCorner.Parent = button
+
+    -- إضافة تأثير عند المرور بالماوس
+    button.MouseEnter:Connect(function()
+        button.BackgroundColor3 = Color3.fromRGB(0, 150, 255) -- تغيير اللون عند المرور
+    end)
+
+    button.MouseLeave:Connect(function()
+        button.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- العودة للون الأصلي
+    end)
+
+    -- تأثير الضغط
+    button.MouseButton1Down:Connect(function()
+        button.BackgroundColor3 = Color3.fromRGB(0, 120, 200) -- تغيير اللون عند الضغط
+    end)
+
+    button.MouseButton1Up:Connect(function()
+        button.BackgroundColor3 = Color3.fromRGB(0, 150, 255) -- العودة للون عند الإفراج عن الزر
+    end)
+
+    return button
+end
+
+-- إنشاء الأزرار باستخدام الدالة مع إضافة مسافات بينها
+local buttonSpacing = 10 -- المسافة بين الأزرار
+local homeButton = createButton("Home", UDim2.new(0.1, 0, 0.5, -15)) -- زر Home
+local inGameButton = createButton("IN GAME", UDim2.new(0.4, 0, 0.5, -15)) -- زر IN GAME
+local infoButton = createButton("Info", UDim2.new(0.7, 0, 0.5, -15)) -- زر Info
+
+-- الحصول على الخدمات
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+
+-- إعداد واجهة المستخدم الرئيسية
+local homeGui = Instance.new("ScreenGui")
+homeGui.Name = "AdvancedHomeGui"
+homeGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- إعداد الإطار الأساسي
+local homeFrame = Instance.new("Frame")
+homeFrame.Size = UDim2.new(0.35, 0, 0.5, 0)  -- حجم أصغر للإطار الأساسي
+homeFrame.Position = UDim2.new(0.325, 0, 0.25, 0)
+homeFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+homeFrame.BorderSizePixel = 0
+homeFrame.Parent = homeGui
+
+-- إضافة زوايا منحنية للإطار
+local homeFrameCorner = Instance.new("UICorner")
+homeFrameCorner.CornerRadius = UDim.new(0, 10)
+homeFrameCorner.Parent = homeFrame
+
+-- رسالة الترحيب
+local playerName = Players.LocalPlayer.Name
+local welcomeLabel = Instance.new("TextLabel")
+welcomeLabel.Size = UDim2.new(1, 0, 0.1, 0)
+welcomeLabel.Position = UDim2.new(0, 0, 0, 0)
+welcomeLabel.BackgroundTransparency = 1
+welcomeLabel.Text = "Welcome, " .. playerName
+welcomeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+welcomeLabel.Font = Enum.Font.GothamBold
+welcomeLabel.TextScaled = true
+welcomeLabel.Parent = homeFrame
+
+-- شريط إدخال سرعة اللاعب
+local speedInput = Instance.new("TextBox")
+speedInput.Size = UDim2.new(0.9, 0, 0.08, 0)  -- تصغير حجم شريط الإدخال
+speedInput.Position = UDim2.new(0.05, 0, 0.12, 0)
+speedInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+speedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedInput.PlaceholderText = "Enter Speed Here"
+speedInput.TextScaled = true
+speedInput.Font = Enum.Font.Gotham
+speedInput.Parent = homeFrame
+
+-- إضافة زوايا منحنية لشريط الإدخال
+local speedInputCorner = Instance.new("UICorner")
+speedInputCorner.CornerRadius = UDim.new(0, 8)
+speedInputCorner.Parent = speedInput
+
+-- إطار عرض اللاعبين مع التمرير
+local playerFrame = Instance.new("ScrollingFrame")
+playerFrame.Size = UDim2.new(0.9, 0, 0.65, 0)  -- تصغير حجم إطار اللاعبين
+playerFrame.Position = UDim2.new(0.05, 0, 0.22, 0)
+playerFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+playerFrame.ScrollBarThickness = 6
+playerFrame.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
+playerFrame.Parent = homeFrame
+
+-- إضافة زوايا منحنية وشريط التمرير
+local playerFrameCorner = Instance.new("UICorner")
+playerFrameCorner.CornerRadius = UDim.new(0, 8)
+playerFrameCorner.Parent = playerFrame
+
+local playerListLayout = Instance.new("UIListLayout")
+playerListLayout.Padding = UDim.new(0, 5)  -- مساحة صغيرة بين العناصر
+playerListLayout.FillDirection = Enum.FillDirection.Vertical
+playerListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+playerListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+playerListLayout.Parent = playerFrame
+
+-- إضافة مربع لكل لاعب مع زر الانتقال
+local function updatePlayerList()
+    playerFrame:ClearAllChildren() -- مسح القائمة الحالية
+    for _, player in ipairs(Players:GetPlayers()) do
+        local playerBox = Instance.new("Frame")
+        playerBox.Size = UDim2.new(0.95, 0, 0.1, 0)  -- مربع صغير لكل لاعب
+        playerBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        playerBox.Parent = playerFrame
+
+        -- نص اسم اللاعب
+        local playerNameLabel = Instance.new("TextLabel")
+        playerNameLabel.Size = UDim2.new(0.6, 0, 1, 0)
+        playerNameLabel.Position = UDim2.new(0.05, 0, 0, 0)
+        playerNameLabel.BackgroundTransparency = 1
+        playerNameLabel.Text = player.Name
+        playerNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        playerNameLabel.Font = Enum.Font.Gotham
+        playerNameLabel.TextScaled = true
+        playerNameLabel.Parent = playerBox
+
+        -- زر الانتقال إلى موقع اللاعب
+        local goToButton = Instance.new("TextButton")
+        goToButton.Size = UDim2.new(0.25, 0, 1, 0)
+        goToButton.Position = UDim2.new(0.7, 0, 0, 0)
+        goToButton.Text = "Go To"
+        goToButton.BackgroundColor3 = Color3.fromRGB(100, 149, 237)  -- لون أزرق شيبي
+        goToButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        goToButton.Font = Enum.Font.Gotham
+        goToButton.TextScaled = true
+        goToButton.Parent = playerBox
+
+        -- إضافة زوايا منحنية للزر
+        local goToButtonCorner = Instance.new("UICorner")
+        goToButtonCorner.CornerRadius = UDim.new(0, 8)
+        goToButtonCorner.Parent = goToButton
+
+        -- عند الضغط على الزر، الانتقال إلى موقع اللاعب
+        goToButton.MouseButton1Click:Connect(function()
+            local character = player.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                local targetPosition = character.HumanoidRootPart.Position
+                local localPlayerCharacter = Players.LocalPlayer.Character
+                if localPlayerCharacter and localPlayerCharacter:FindFirstChild("HumanoidRootPart") then
+                    localPlayerCharacter.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
+                end
+            else
+                warn("Could not find player's character or humanoid root part.")
+            end
+        end)
+    end
+end
+
+-- تحديث قائمة اللاعبين عند دخول أو خروج لاعب
+Players.PlayerAdded:Connect(function()
+    updatePlayerList()
+end)
+Players.PlayerRemoving:Connect(function()
+    updatePlayerList()
+end)
+
+updatePlayerList() -- تحديث القائمة عند بدء السكريبت
+
+-- تغيير سرعة اللاعب عند إدخال قيمة جديدة
+speedInput.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local speedValue = tonumber(speedInput.Text)
+        if speedValue and speedValue > 0 then
+            local player = Players.LocalPlayer
+            local character = player.Character or player.CharacterAdded:Wait()
+            local humanoid = character:WaitForChild("Humanoid")
+
+            humanoid.WalkSpeed = speedValue
+            speedInput.Text = "" -- مسح النص بعد إدخال السرعة
+        else
+            print("Please enter a valid speed value.")
+        end
+    end
+end)
+
+-- عرض الإطار عند بدء اللعبة
+homeFrame.Visible = true
+
+-- إنشاء واجهة IN GAME في CoreGui
+local inGameGui = Instance.new("ScreenGui")
+inGameGui.Name = "InGameGui"
+inGameGui.Parent = game.CoreGui
+
+local inGameFrame = Instance.new("Frame")
+inGameFrame.Size = UDim2.new(0.5, 0, 0.5, 0)
+inGameFrame.Position = UDim2.new(0.25, 0, 0.25, 0)
+inGameFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+inGameFrame.Visible = false
+inGameFrame.Parent = inGameGui
+
+local inGameFrameCorner = Instance.new("UICorner")
+inGameFrameCorner.CornerRadius = UDim.new(0, 15)
+inGameFrameCorner.Parent = inGameFrame
+
+-- وظيفة لإنشاء زر toggle مع نص على اليسار
+local function createToggleButton(parent, position)
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Size = UDim2.new(0, 40, 0, 20)
+    toggleButton.Position = position
+    toggleButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    toggleButton.Text = ""
+    toggleButton.AutoButtonColor = false
+    toggleButton.Parent = parent
+
+    local toggleButtonCorner = Instance.new("UICorner")
+    toggleButtonCorner.CornerRadius = UDim.new(0, 10)
+    toggleButtonCorner.Parent = toggleButton
+
+    local switchIndicator = Instance.new("Frame")
+    switchIndicator.Size = UDim2.new(0, 18, 0, 18)
+    switchIndicator.Position = UDim2.new(0, 2, 0, 2)
+    switchIndicator.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+    switchIndicator.BorderSizePixel = 0
+    switchIndicator.Parent = toggleButton
+
+    local switchIndicatorCorner = Instance.new("UICorner")
+    switchIndicatorCorner.CornerRadius = UDim.new(0, 9)
+    switchIndicatorCorner.Parent = switchIndicator
+
+    local isToggled = false
+
+    toggleButton.MouseButton1Click:Connect(function()
+        isToggled = not isToggled
+
+        if isToggled then
+            switchIndicator:TweenPosition(UDim2.new(1, -22, 0, 2), "Out", "Quad", 0.2, true)
+            switchIndicator.BackgroundColor3 = Color3.fromRGB(0, 191, 255)
+        else
+            switchIndicator:TweenPosition(UDim2.new(0, 2, 0, 2), "Out", "Quad", 0.2, true)
+            switchIndicator.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+        end
+    end)
+
+    toggleButton.MouseEnter:Connect(function()
+        toggleButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    end)
+
+    toggleButton.MouseLeave:Connect(function()
+        toggleButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    end)
+
+    -- إضافة نص "Add coin 1" على اليسار لكل زر
+    local coinLabel = Instance.new("TextLabel")
+    coinLabel.Size = UDim2.new(1, -50, 1, 0) -- عرض النص ليتناسب مع الزر
+    coinLabel.Position = UDim2.new(0, -100, 0, 0) -- موضع النص على اليسار
+    coinLabel.BackgroundTransparency = 1 -- جعل خلفية النص شفافة
+    coinLabel.Text = "Add coin 1" -- نص الزر
+    coinLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- لون النص
+    coinLabel.Parent = toggleButton -- إضافة النص كطفل للزر
+end
+
+local buttonSpacing = 30 
+for i = 0, 4 do
+    createToggleButton(inGameFrame, UDim2.new(1, -50, 0, 10 + i * buttonSpacing))
+end
+-- إنشاء واجهة Info في CoreGui
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+
+local infoGui = Instance.new("ScreenGui")
+infoGui.Name = "InfoGui"
+infoGui.Parent = CoreGui
+
+-- إطار المعلومات الرئيسي
+local infoFrame = Instance.new("Frame")
+infoFrame.Size = UDim2.new(0.5, 0, 0.5, 0)
+infoFrame.Position = UDim2.new(0.25, 0, 0.25, 0)
+infoFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- لون خلفية الإطار
+infoFrame.Visible = false
+infoFrame.Parent = infoGui
+
+-- إضافة UICorner لإطار Info
+local infoFrameCorner = Instance.new("UICorner")
+infoFrameCorner.CornerRadius = UDim.new(0, 15)
+infoFrameCorner.Parent = infoFrame
+
+-- إضافة إطار خلفي للصورة والنص
+local backgroundFrame = Instance.new("Frame")
+backgroundFrame.Size = UDim2.new(1, -20, 1, -20) -- تقليل المساحة حول الإطار
+backgroundFrame.Position = UDim2.new(0, 10, 0, 10)
+backgroundFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- لون الخلفية
+backgroundFrame.Parent = infoFrame
+
+-- إضافة TextLabel لعرض معلومات المطور
+local infoLabel = Instance.new("TextLabel")
+infoLabel.Size = UDim2.new(1, 0, 0.3, 0) -- مساحة للنص
+infoLabel.Position = UDim2.new(0, 0, 0, 10) -- موضع النص
+infoLabel.BackgroundTransparency = 1
+infoLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- لون النص
+infoLabel.TextScaled = true
+infoLabel.Text = "مطور: kulthor\nاسم Roblox: nizartitwaniii"
+infoLabel.Parent = backgroundFrame
+
+-- إضافة صورة اللاعب من بروفايل Roblox
+local playerImage = Instance.new("ImageLabel")
+playerImage.Size = UDim2.new(0.3, 0, 0.3, 0)
+playerImage.Position = UDim2.new(0.5, -75, 0.4, 0) -- موضع الصورة
+playerImage.BackgroundTransparency = 1
+playerImage.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=1416407551&width=420&height=420&format=png"  -- صورة بروفايل المطور
+playerImage.Parent = backgroundFrame
+
+-- إضافة زر لإغلاق الواجهة
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0.2, 0, 0.1, 0) -- حجم الزر
+closeButton.Position = UDim2.new(0.4, 0, 0.85, 0) -- موضع الزر
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- لون خلفية الزر
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- لون النص
+closeButton.TextScaled = true
+closeButton.Text = "إغلاق"
+closeButton.Parent = backgroundFrame
+
+-- وظيفة لتبديل رؤية Info Frame
+local function toggleInfoGui()
+    infoFrame.Visible = not infoFrame.Visible
+end
+
+-- وظيفة لإغلاق الواجهة عند الضغط على الزر
+closeButton.MouseButton1Click:Connect(function()
+    infoFrame.Visible = false
+end)
+
+-- مثال: تبديل رؤية واجهة المستخدم عند ضغط اللاعب على مفتاح (مثل 'I')
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.I then
+        toggleInfoGui()
+    end
+end)
+-- دالة لإظهار واجهة Home أو إخفائها
+homeButton.MouseButton1Click:Connect(function()
+    activateButton(homeButton)
+    if homeFrame.Visible then
+        hideInterface(homeFrame)
+    else
+        hideInterface(inGameFrame)
+        hideInterface(infoFrame)
+        showInterface(homeFrame)
+    end
+end)
+
+-- دالة لإظهار واجهة IN GAME أو إخفائها
+inGameButton.MouseButton1Click:Connect(function()
+    activateButton(inGameButton)
+    if inGameFrame.Visible then
+        hideInterface(inGameFrame)
+    else
+        hideInterface(homeFrame)
+        hideInterface(infoFrame)
+        showInterface(inGameFrame)
+    end
+end)
+
+-- دالة لإظهار واجهة Info أو إخفائها
+infoButton.MouseButton1Click:Connect(function()
+    activateButton(infoButton)
+    if infoFrame.Visible then
+        hideInterface(infoFrame)
+    else
+        hideInterface(homeFrame)
+        hideInterface(inGameFrame)
+        showInterface(infoFrame)
+    end
+end)
+
+-- إظهار واجهة الشريط السفلي عند تشغيل السكربت
+bottomBarFrame.Visible = true
+bottomBarFrame.Position = UDim2.new(0.25, 0, 1, -80) -- بداية من الأسفل
+bottomBarFrame:TweenPosition(UDim2.new(0.25, 0, 1, -80), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.5, true)
